@@ -1,8 +1,0 @@
-# Balanced multi-unit transportation problem: 3 warehouses, 3 stores (total 7 units).
-3 3
-2 3 2
-3 2 2
-8 6 10
-9 12 13
-14 9 16
-

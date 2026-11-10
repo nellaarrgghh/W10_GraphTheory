@@ -74,32 +74,31 @@ def _min_line_cover(matrix, row_match, col_match):
 
 
 def hungarian(cost_matrix):
-    """Solve an N x N assignment matrix using the Kuhn-Munkres steps from W11."""
     size = len(cost_matrix)
     if size == 0:
         return [], []
 
     work = [row[:] for row in cost_matrix]
-    steps = []
+    steps = [('Initial cost matrix (N x N)', [row[:] for row in work], None, None)]
 
     for r in range(size):
         row_min = min(work[r])
         for c in range(size):
             work[r][c] -= row_min
-    steps.append(('Row reduction', [row[:] for row in work], None, None))
+    steps.append(('Row reduction (subtract row minimums)', [row[:] for row in work], None, None))
 
     for c in range(size):
         col_min = min(work[r][c] for r in range(size))
         for r in range(size):
             work[r][c] -= col_min
-    steps.append(('Column reduction', [row[:] for row in work], None, None))
+    steps.append(('Column reduction (subtract column minimums)', [row[:] for row in work], None, None))
 
     while True:
         row_match, col_match = _max_zero_matching(work)
         covered_rows, covered_cols = _min_line_cover(work, row_match, col_match)
         line_count = sum(covered_rows) + sum(covered_cols)
         steps.append((
-            f'Zero cover ({line_count}/{size} lines)',
+            f'Cover all zeros ({line_count}/{size} lines)',
             [row[:] for row in work],
             covered_rows,
             covered_cols,
@@ -118,57 +117,52 @@ def hungarian(cost_matrix):
                     work[r][c] -= min_uncovered
                 elif covered_rows[r] and covered_cols[c]:
                     work[r][c] += min_uncovered
+        steps.append((
+            f'Adjust uncovered elements (min uncovered = {min_uncovered})',
+            [row[:] for row in work],
+            None,
+            None,
+        ))
 
 
-def solve_transportation(costs, supplies, demands):
-    """Reduce a transportation instance to bipartite matching via unit splitting."""
-    total_supply = sum(supplies)
-    total_demand = sum(demands)
-    adj_supplies = list(supplies)
-    adj_demands = list(demands)
-    adj_costs = [row[:] for row in costs]
-    balance_note = 'Balanced (total supply equals total demand)'
+def solve_assignment(costs):
+    """Solve a dynamic m x n assignment matrix by padding to N x N if rectangular."""
+    m = len(costs)
+    n = len(costs[0])
+    size = max(m, n)
 
-    # Pad unbalanced instances with a zero-cost dummy row or column so every unit matches.
-    if total_supply > total_demand:
-        diff = total_supply - total_demand
-        adj_demands.append(diff)
-        for row in adj_costs:
-            row.append(0)
-        balance_note = f'Unbalanced: added dummy destination with demand {diff}'
-    elif total_demand > total_supply:
-        diff = total_demand - total_supply
-        adj_supplies.append(diff)
-        adj_costs.append([0] * len(adj_demands))
-        balance_note = f'Unbalanced: added dummy source with supply {diff}'
-
-    row_map = [i for i, s in enumerate(adj_supplies) for _ in range(s)]
-    col_map = [j for j, d in enumerate(adj_demands) for _ in range(d)]
-
-    expanded_matrix = [
-        [adj_costs[r_orig][c_orig] for c_orig in col_map]
-        for r_orig in row_map
+    padded = [
+        [costs[r][c] if (r < m and c < n) else 0 for c in range(size)]
+        for r in range(size)
     ]
 
-    row_match, steps = hungarian(expanded_matrix)
+    if m == n:
+        shape_note = f'Square matrix ({m} x {n})'
+    elif m < n:
+        shape_note = f'Rectangular ({m} x {n}): padded with {n - m} zero-cost dummy row(s) to {size} x {size}'
+    else:
+        shape_note = f'Rectangular ({m} x {n}): padded with {m - n} zero-cost dummy column(s) to {size} x {size}'
 
-    m, n = len(costs), len(costs[0])
-    allocation = [[0] * len(adj_demands) for _ in range(len(adj_supplies))]
-    for unit_r, unit_c in enumerate(row_match):
-        allocation[row_map[unit_r]][col_map[unit_c]] += 1
+    row_match, steps = hungarian(padded)
 
-    total_cost = sum(
-        allocation[i][j] * costs[i][j]
-        for i in range(m)
-        for j in range(n)
-    )
+    assignments = []
+    total_cost = 0
+    for r, c in enumerate(row_match):
+        if r < m and c < n:
+            cost = costs[r][c]
+            total_cost += cost
+            assignments.append((r, c, cost, 'matched'))
+        elif r < m and c >= n:
+            assignments.append((r, c, 0, 'dummy_col'))
+        elif r >= m and c < n:
+            assignments.append((r, c, 0, 'dummy_row'))
 
     return {
-        'allocation': allocation,
-        'real_shape': (m, n),
+        'assignments': assignments,
+        'original_shape': (m, n),
+        'padded_size': size,
+        'shape_note': shape_note,
         'total_cost': total_cost,
-        'balance_note': balance_note,
-        'expanded_size': len(expanded_matrix),
         'steps': steps,
     }
 
@@ -184,43 +178,30 @@ def _parse_int_list(line, expected_len, label):
 
 
 def read_problem(path):
-    """Read either an m x n assignment cost matrix or a supply/demand transportation file."""
+    """Read an m x n cost matrix from a text file."""
     lines = []
     for raw in Path(path).read_text(encoding='utf-8-sig').splitlines():
         clean = raw.split('#', 1)[0].strip()
         if clean:
             lines.append(clean)
     if not lines:
-        raise ValueError('Input file is empty; expected m n on the first line')
+        raise ValueError('Input file is empty; expected "m n" on the first line')
 
     m, n = _parse_int_list(lines[0], 2, 'Header line (m n)')
     if m <= 0 or n <= 0:
-        raise ValueError('Number of sources and destinations must be positive')
+        raise ValueError('Matrix dimensions m and n must be positive integers')
 
     remaining = lines[1:]
-    if len(remaining) == m:
-        supplies = [1] * m
-        demands = [1] * n
-        cost_lines = remaining
-    elif len(remaining) == m + 2:
-        supplies = _parse_int_list(remaining[0], m, 'Supply line')
-        demands = _parse_int_list(remaining[1], n, 'Demand line')
-        if any(s <= 0 for s in supplies) or any(d <= 0 for d in demands):
-            raise ValueError('Supplies and demands must be positive integers')
-        cost_lines = remaining[2:]
-    else:
-        raise ValueError(
-            f'Expected {m} cost rows (unit assignment) or 2 supply/demand lines + {m} cost rows, '
-            f'found {len(remaining)} lines after header'
-        )
+    if len(remaining) != m:
+        raise ValueError(f'Expected {m} cost rows after header, found {len(remaining)}')
 
     costs = [
-        _parse_int_list(row_line, n, f'Cost row {idx + 1}')
-        for idx, row_line in enumerate(cost_lines)
+        _parse_int_list(row_line, n, f'Row {idx + 1}')
+        for idx, row_line in enumerate(remaining)
     ]
     if any(c < 0 for row in costs for c in row):
-        raise ValueError('Transportation costs cannot be negative')
-    return costs, supplies, demands
+        raise ValueError('Matrix costs/distances cannot be negative')
+    return costs
 
 
 def _prompt_int_list(prompt, expected_len, allow_zero=False):
@@ -237,21 +218,14 @@ def _prompt_int_list(prompt, expected_len, allow_zero=False):
 
 
 def read_interactive():
-    print('Enter a transportation or assignment problem.')
+    print('Hungarian Algorithm - Dynamic m x n Assignment Solver (MBG Kitchen to School)')
     print('Press Ctrl+C to cancel.')
-    m, n = _prompt_int_list('Sources and destinations (m n): ', 2)
-    mode = input('Unit assignment (1) or custom supplies/demands (2)? [1/2]: ').strip()
-    if mode == '2':
-        supplies = _prompt_int_list(f'Supplies ({m} positive integers): ', m)
-        demands = _prompt_int_list(f'Demands ({n} positive integers): ', n)
-    else:
-        supplies = [1] * m
-        demands = [1] * n
+    m, n = _prompt_int_list('Matrix size (m rows / kitchens, n columns / schools): ', 2)
     costs = [
-        _prompt_int_list(f'Cost row {i + 1}/{m} ({n} non-negative integers): ', n, allow_zero=True)
+        _prompt_int_list(f'Row {i + 1}/{m} ({n} non-negative integers): ', n, allow_zero=True)
         for i in range(m)
     ]
-    return costs, supplies, demands
+    return costs
 
 
 def _format_matrix(matrix, covered_rows=None, covered_cols=None):
@@ -269,72 +243,60 @@ def _format_matrix(matrix, covered_rows=None, covered_cols=None):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Solve the Transportation Problem using the Hungarian matching algorithm'
+        description='Solve a dynamic m x n assignment problem using the Hungarian Algorithm (Kuhn-Munkres)'
     )
     parser.add_argument(
         'input', type=Path, nargs='?',
-        help='Optional problem file; omit to enter values interactively'
+        help='Optional matrix file; omit to enter dimensions and values interactively'
+    )
+    parser.add_argument(
+        '--no-steps', action='store_true',
+        help='Hide intermediate Hungarian reduction and zero-cover matrices'
     )
     parser.add_argument(
         '--steps', action='store_true',
-        help='Print intermediate Hungarian reduction and zero-cover matrices'
+        help='Show intermediate Hungarian reduction and zero-cover matrices (default)'
+    )
+    parser.add_argument(
+        '--row-label', default='MBG Kitchen',
+        help='Label for row entities (default: "MBG Kitchen")'
+    )
+    parser.add_argument(
+        '--col-label', default='School',
+        help='Label for column entities (default: "School")'
     )
     args = parser.parse_args()
 
     try:
-        costs, supplies, demands = (
-            read_problem(args.input) if args.input else read_interactive()
-        )
+        costs = read_problem(args.input) if args.input else read_interactive()
     except (EOFError, KeyboardInterrupt):
         parser.exit(1, '\nInput cancelled.\n')
     except (OSError, ValueError) as error:
         parser.error(str(error))
 
-    result = solve_transportation(costs, supplies, demands)
-    m, n = result['real_shape']
-    allocation = result['allocation']
+    result = solve_assignment(costs)
+    m, n = result['original_shape']
 
     print(f'Input: {args.input.name if args.input else "interactive"}')
-    print(f'Sources: {m} (supplies: {" ".join(map(str, supplies))})')
-    print(f'Destinations: {n} (demands: {" ".join(map(str, demands))})')
-    print(f'Status: {result["balance_note"]}')
-    print(f'Expanded Matching Size: {result["expanded_size"]} x {result["expanded_size"]}')
+    print(f'Dimensions: {m} {args.row_label}(s) x {n} {args.col_label}(s)')
+    print(f'Matrix Status: {result["shape_note"]}')
 
-    if args.steps:
+    if not args.no_steps:
         print('\nHungarian Algorithm Steps:')
         for idx, (title, mat, cov_r, cov_c) in enumerate(result['steps'], start=1):
             print(f'[{idx}] {title}:')
             print(_format_matrix(mat, cov_r, cov_c))
 
-    print('\nOptimal Shipments:')
-    unit_mode = all(s == 1 for s in supplies) and all(d == 1 for d in demands) and m == n
-    for i in range(len(allocation)):
-        for j in range(len(allocation[0])):
-            shipped = allocation[i][j]
-            if shipped == 0:
-                continue
-            if i < m and j < n:
-                unit_cost = costs[i][j]
-                if unit_mode:
-                    print(f'  Source {i + 1} -> Destination {j + 1}: cost {unit_cost}')
-                else:
-                    subtotal = shipped * unit_cost
-                    print(
-                        f'  Source {i + 1} -> Destination {j + 1}: '
-                        f'{shipped} unit(s) x {unit_cost} = {subtotal}'
-                    )
-            elif i >= m:
-                print(
-                    f'  Dummy Source -> Destination {j + 1}: '
-                    f'{shipped} unfulfilled unit(s) (cost 0)'
-                )
-            else:
-                print(
-                    f'  Source {i + 1} -> Dummy Destination: '
-                    f'{shipped} surplus unit(s) (cost 0)'
-                )
+    print('\nOptimal Assignment:')
+    for r, c, cost, status in result['assignments']:
+        if status == 'matched':
+            print(f'  {args.row_label} {r + 1} -> {args.col_label} {c + 1} : {cost} km')
+        elif status == 'dummy_col':
+            print(f'  {args.row_label} {r + 1} -> Unassigned (Dummy {args.col_label} {c + 1}) : 0 km')
+        elif status == 'dummy_row':
+            print(f'  Unassigned (Dummy {args.row_label} {r + 1}) -> {args.col_label} {c + 1} : 0 km')
 
-    print(f'Minimum Total Cost: {result["total_cost"]}')
+    print(f'Minimum Total Distance / Cost: {result["total_cost"]} km')
 
 
 if __name__ == '__main__':

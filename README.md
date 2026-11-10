@@ -9,16 +9,17 @@ Informatics ITS Graph Theory class Group 6
 
 ---
 
-## A. Hungarian Algorithm (Kuhn-Munkres) for the Transportation Problem
+## A. Hungarian Algorithm (Kuhn-Munkres) — Dynamic $m \times n$ MBG Kitchen-to-School Assignment
 
 ### 1. Short explanation about algorithm
-The **Hungarian Algorithm (Kuhn-Munkres Algorithm)** finds a minimum-cost perfect matching in a weighted bipartite graph. It solves both one-to-one assignment problems (such as moving bulldozers to construction sites in the Week 11 lecture slides) and general multi-unit transportation problems:
+The **Hungarian Algorithm (Kuhn-Munkres Algorithm)** finds a minimum-cost one-to-one matching in a weighted bipartite graph. In this implementation, we recreate the lecture's Hungarian Algorithm workflow for a **dynamic $m \times n$ matrix size** and apply it to the **Makan Bergizi Gratis (MBG)** catering distribution problem—assigning $m$ **MBG Kitchens (Dapur SPPG)** to $n$ **Target Schools** to minimize total delivery distance (in km):
 
-- Unbalanced supply and demand totals are equalized first by inserting a zero-cost dummy source or dummy destination with capacity $|\sum s_i - \sum d_j|$.
-- A transportation problem with integer supplies $s_1, \dots, s_m$ and demands $d_1, \dots, d_n$ reduces to an $N \times N$ bipartite assignment matrix ($N = \max(\sum s_i, \sum d_j)$) by splitting each source $i$ into $s_i$ unit vertices and each destination $j$ into $d_j$ unit vertices.
-- The algorithm subtracts the minimum entry of each row from its row, then subtracts the minimum entry of each column from its column, creating zero-cost edges without changing the optimal assignment.
-- Using maximum bipartite matching on the zero entries and Konig's theorem, the solver finds the minimum number of horizontal and vertical lines needed to cover all zeros.
-- While fewer than $N$ lines cover all zeros, the smallest uncovered value is subtracted from every uncovered entry and added to every doubly covered entry. Once $N$ lines are required, a full zero-cost matching exists and is aggregated back into source-to-destination shipment quantities.
+1. **Construct & Dynamically Pad the Cost Matrix ($N \times N$):** Given any $m \times n$ distance matrix ($m$ kitchens, $n$ schools), if $m \neq n$, the matrix is automatically padded with zero-cost dummy rows ($m < n$) or dummy columns ($m > n$) to form a square $N \times N$ matrix where $N = \max(m, n)$.
+2. **Subtract Row Minimums:** Subtract the smallest entry in each row from all entries in that row.
+3. **Subtract Column Minimums:** Subtract the smallest entry in each column from all entries in that column.
+4. **Cover All Zeros with Minimum Lines:** Using maximum bipartite matching on the zero entries and König's theorem, cover all zeros using the minimum number of horizontal and vertical lines. If the number of lines equals $N$, an optimal assignment of zeros exists (proceed to Step 6).
+5. **Adjust Uncovered Elements:** Find the smallest uncovered value, subtract it from every uncovered element, add it to every doubly covered element (intersection of horizontal and vertical lines), and return to Step 4.
+6. **Determine the Optimal Assignment:** Select $N$ independent zero entries (one per row and column) and map them back to the original $m$ MBG kitchens and $n$ schools.
 
 ### 2. Prerequisite to run the code, if any
 - Python 3.10 or newer.
@@ -33,134 +34,154 @@ cd W10
 
 #### Run with sample input files:
 ```sh
-# Bulldozer assignment problem from the lecture slides (with step-by-step matrices)
-python3 hungarian.py samples/bulldozer.txt --steps
+# 1. MBG 5x5 square case (5 MBG Kitchens assigned to 5 Schools)
+python3 hungarian.py samples/mbg_5x5.txt
 
-# Balanced multi-unit transportation problem
-python3 hungarian.py samples/balanced_transport.txt
+# 2. MBG 3x4 rectangular case (3 MBG Kitchens, 4 Schools -> dynamic dummy row padding)
+python3 hungarian.py samples/mbg_3x4.txt
 
-# Unbalanced transportation problems (surplus supply or unfulfilled demand)
-python3 hungarian.py samples/unbalanced_supply.txt
-python3 hungarian.py samples/unbalanced_demand.txt
+# 3. MBG 4x3 rectangular case (4 MBG Kitchens, 3 Schools -> dynamic dummy column padding)
+python3 hungarian.py samples/mbg_4x3.txt
+
+# 4. Original 4x4 Bulldozer case from the W11 lecture slides
+python3 hungarian.py samples/bulldozer.txt --row-label Bulldozer --col-label "Construction Site"
 ```
 
-#### Run interactively:
+#### Run interactively (custom dynamic $m \times n$ matrix):
 ```sh
 python3 hungarian.py
 ```
-Follow the prompts to enter the dimensions, choose unit assignment (`1`) or custom supplies and demands (`2`), and enter each row of the cost matrix:
+Enter any matrix dimensions `m n` followed by each row of distances:
 ```text
-Enter a transportation or assignment problem.
+Hungarian Algorithm - Dynamic m x n Assignment Solver (MBG Kitchen to School)
 Press Ctrl+C to cancel.
-Sources and destinations (m n): 2 2
-Unit assignment (1) or custom supplies/demands (2)? [1/2]: 2
-Supplies (2 positive integers): 3 2
-Demands (2 positive integers): 2 2
-Cost row 1/2 (2 non-negative integers): 10 20
-Cost row 2/2 (2 non-negative integers): 15 12
+Matrix size (m rows / kitchens, n columns / schools): 3 3
+Row 1/3 (3 non-negative integers): 12 8 11
+Row 2/3 (3 non-negative integers): 7 14 9
+Row 3/3 (3 non-negative integers): 10 6 13
 ```
 
 ### 4. Result of sample run
 
-#### Sample 1: Bulldozer to Construction Sites (`samples/bulldozer.txt`)
+#### Sample 1: MBG $5 \times 5$ Assignment (`samples/mbg_5x5.txt`)
+Assigning 5 MBG Kitchens (SPPG) to 5 Schools with delivery distances in km:
 ```text
-$ python3 hungarian.py samples/bulldozer.txt --steps
-Input: bulldozer.txt
-Sources: 4 (supplies: 1 1 1 1)
-Destinations: 4 (demands: 1 1 1 1)
-Status: Balanced (total supply equals total demand)
-Expanded Matching Size: 4 x 4
+$ python3 hungarian.py samples/mbg_5x5.txt
+Input: mbg_5x5.txt
+Dimensions: 5 MBG Kitchen(s) x 5 School(s)
+Matrix Status: Square matrix (5 x 5)
 
 Hungarian Algorithm Steps:
-[1] Row reduction:
-      15     0     0     5 
-       0    50    20    30 
-      35     5     0    15 
-       0    65    50    70 
-[2] Column reduction:
-      15     0     0     0 
-       0    50    20    25 
-      35     5     0    10 
-       0    65    50    65 
-[3] Zero cover (3/4 lines):
-  -   15|    0     0     0 
-       0|   50    20    25 
-  -   35|    5     0    10 
-       0|   65    50    65 
-[4] Zero cover (3/4 lines):
-  -   35|    0     0|    0 
-       0|   30     0|    5 
-      55|    5     0|   10 
-       0|   45    30|   45 
-[5] Zero cover (4/4 lines):
-  -   40     0     5     0 
-  -    0    25     0     0 
-  -   55     0     0     5 
-  -    0    40    30    40 
+[1] Initial cost matrix (N x N):
+      18    12    12    14    16 
+      10    22    14    17    21 
+      24    16    15    19    22 
+       9    25    19    21    24 
+      21    14    11    17    19 
+[2] Row reduction (subtract row minimums):
+       6     0     0     2     4 
+       0    12     4     7    11 
+       9     1     0     4     7 
+       0    16    10    12    15 
+      10     3     0     6     8 
+[3] Column reduction (subtract column minimums):
+       6     0     0     0     0 
+       0    12     4     5     7 
+       9     1     0     2     3 
+       0    16    10    10    11 
+      10     3     0     4     4 
+[4] Cover all zeros (3/5 lines):
+  -    6|    0     0|    0     0 
+       0|   12     4|    5     7 
+       9|    1     0|    2     3 
+       0|   16    10|   10    11 
+      10|    3     0|    4     4 
+[5] Adjust uncovered elements (min uncovered = 1):
+       7     0     1     0     0 
+       0    11     4     4     6 
+       9     0     0     1     2 
+       0    15    10     9    10 
+      10     2     0     3     3 
+[6] Cover all zeros (4/5 lines):
+  -    7|    0     1     0     0 
+       0|   11     4     4     6 
+  -    9|    0     0     1     2 
+       0|   15    10     9    10 
+  -   10|    2     0     3     3 
+[7] Adjust uncovered elements (min uncovered = 4):
+      11     0     1     0     0 
+       0     7     0     0     2 
+      13     0     0     1     2 
+       0    11     6     5     6 
+      14     2     0     3     3 
+[8] Cover all zeros (5/5 lines):
+  -   11     0     1     0     0 
+  -    0     7     0     0     2 
+  -   13     0     0     1     2 
+  -    0    11     6     5     6 
+  -   14     2     0     3     3 
 
-Optimal Shipments:
-  Source 1 -> Destination 4: cost 80
-  Source 2 -> Destination 3: cost 55
-  Source 3 -> Destination 2: cost 95
-  Source 4 -> Destination 1: cost 45
-Minimum Total Cost: 275
+Optimal Assignment:
+  MBG Kitchen 1 -> School 5 : 16 km
+  MBG Kitchen 2 -> School 4 : 17 km
+  MBG Kitchen 3 -> School 2 : 16 km
+  MBG Kitchen 4 -> School 1 : 9 km
+  MBG Kitchen 5 -> School 3 : 11 km
+Minimum Total Distance / Cost: 69 km
 ```
 
-#### Sample 2: Balanced Multi-Unit Transportation (`samples/balanced_transport.txt`)
+#### Sample 2: Dynamic Rectangular $3 \times 4$ MBG Assignment (`samples/mbg_3x4.txt`)
+When there are fewer MBG kitchens than schools ($3 \times 4$), the solver pads a zero-cost dummy kitchen row to form a $4 \times 4$ matrix:
 ```text
-$ python3 hungarian.py samples/balanced_transport.txt
-Input: balanced_transport.txt
-Sources: 3 (supplies: 2 3 2)
-Destinations: 3 (demands: 3 2 2)
-Status: Balanced (total supply equals total demand)
-Expanded Matching Size: 7 x 7
+$ python3 hungarian.py samples/mbg_3x4.txt
+Input: mbg_3x4.txt
+Dimensions: 3 MBG Kitchen(s) x 4 School(s)
+Matrix Status: Rectangular (3 x 4): padded with 1 zero-cost dummy row(s) to 4 x 4
 
-Optimal Shipments:
-  Source 1 -> Destination 3: 2 unit(s) x 10 = 20
-  Source 2 -> Destination 1: 3 unit(s) x 9 = 27
-  Source 3 -> Destination 2: 2 unit(s) x 9 = 18
-Minimum Total Cost: 65
+Hungarian Algorithm Steps:
+[1] Initial cost matrix (N x N):
+      12     7     9    14 
+       8    11     6    10 
+      15     9     8    11 
+       0     0     0     0 
+...
+[8] Cover all zeros (4/4 lines):
+  -   4    0    3    6 
+  -   0    4    0    2 
+  -   5    0    0    1 
+  -   0    1    2    0 
+
+Optimal Assignment:
+  MBG Kitchen 1 -> School 2 : 7 km
+  MBG Kitchen 2 -> School 1 : 8 km
+  MBG Kitchen 3 -> School 3 : 8 km
+  Unassigned (Dummy MBG Kitchen 4) -> School 4 : 0 km
+Minimum Total Distance / Cost: 23 km
 ```
 
-#### Sample 3: Unbalanced Supply (`samples/unbalanced_supply.txt`)
+#### Sample 3: Dynamic Rectangular $4 \times 3$ MBG Assignment (`samples/mbg_4x3.txt`)
+When there are more MBG kitchens than schools ($4 \times 3$), the solver pads a zero-cost dummy school column to form a $4 \times 4$ matrix:
 ```text
-$ python3 hungarian.py samples/unbalanced_supply.txt
-Input: unbalanced_supply.txt
-Sources: 2 (supplies: 3 2)
-Destinations: 2 (demands: 2 2)
-Status: Unbalanced: added dummy destination with demand 1
-Expanded Matching Size: 5 x 5
+$ python3 hungarian.py samples/mbg_4x3.txt
+Input: mbg_4x3.txt
+Dimensions: 4 MBG Kitchen(s) x 3 School(s)
+Matrix Status: Rectangular (4 x 3): padded with 1 zero-cost dummy column(s) to 4 x 4
 
-Optimal Shipments:
-  Source 1 -> Destination 1: 2 unit(s) x 10 = 20
-  Source 1 -> Dummy Destination: 1 surplus unit(s) (cost 0)
-  Source 2 -> Destination 2: 2 unit(s) x 12 = 24
-Minimum Total Cost: 44
-```
-
-#### Sample 4: Unbalanced Demand (`samples/unbalanced_demand.txt`)
-```text
-$ python3 hungarian.py samples/unbalanced_demand.txt
-Input: unbalanced_demand.txt
-Sources: 2 (supplies: 2 1)
-Destinations: 2 (demands: 2 2)
-Status: Unbalanced: added dummy source with supply 1
-Expanded Matching Size: 4 x 4
-
-Optimal Shipments:
-  Source 1 -> Destination 2: 2 unit(s) x 8 = 16
-  Source 2 -> Destination 1: 1 unit(s) x 9 = 9
-  Dummy Source -> Destination 1: 1 unfulfilled unit(s) (cost 0)
-Minimum Total Cost: 25
+Optimal Assignment:
+  MBG Kitchen 1 -> Unassigned (Dummy School 4) : 0 km
+  MBG Kitchen 2 -> School 1 : 7 km
+  MBG Kitchen 3 -> School 3 : 6 km
+  MBG Kitchen 4 -> School 2 : 7 km
+Minimum Total Distance / Cost: 20 km
 ```
 
 #### Summary of Sample Results:
-| Input File | Sources ($m$) | Destinations ($n$) | Expanded Size ($N \times N$) | Minimum Total Cost |
-| :--- | :---: | :---: | :---: | :---: |
-| `samples/bulldozer.txt` | 4 | 4 | $4 \times 4$ | **275** |
-| `samples/balanced_transport.txt` | 3 | 3 | $7 \times 7$ | **65** |
-| `samples/unbalanced_supply.txt` | 2 | 2 | $5 \times 5$ | **44** |
-| `samples/unbalanced_demand.txt` | 2 | 2 | $4 \times 4$ | **25** |
+| Input File | Case Description | Original Size ($m \times n$) | Padded Size ($N \times N$) | Minimum Total Distance |
+| :--- | :--- | :---: | :---: | :---: |
+| `samples/mbg_5x5.txt` | 5 MBG Kitchens to 5 Schools | $5 \times 5$ | $5 \times 5$ | **69 km** |
+| `samples/mbg_3x4.txt` | 3 MBG Kitchens to 4 Schools (dummy row) | $3 \times 4$ | $4 \times 4$ | **23 km** |
+| `samples/mbg_4x3.txt` | 4 MBG Kitchens to 3 Schools (dummy column) | $4 \times 3$ | $4 \times 4$ | **20 km** |
+| `samples/bulldozer.txt` | 4 Bulldozers to 4 Sites (W11 slide baseline) | $4 \times 4$ | $4 \times 4$ | **275 km** |
 
 ---
 
@@ -181,4 +202,3 @@ Minimum Total Cost: 25
 
 ### AI Involved:
 1. [Insert AI share link here]
-

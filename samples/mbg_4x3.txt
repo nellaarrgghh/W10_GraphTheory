@@ -1,0 +1,8 @@
+# MBG (Makan Bergizi Gratis) Kitchen to School Assignment (4 x 3 rectangular)
+# 4 SPPG Kitchens and 3 Target Schools (m > n, padded with 1 dummy school column).
+4 3
+11  8 13
+ 7 12  9
+14 10  6
+ 9  7 10
+

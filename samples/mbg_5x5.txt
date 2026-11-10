@@ -1,0 +1,9 @@
+# MBG (Makan Bergizi Gratis) Kitchen to School Assignment (5 x 5)
+# 5 SPPG Kitchens (rows) and 5 Target Schools (columns), delivery distance in km.
+5 5
+18 12 12 14 16
+10 22 14 17 21
+24 16 15 19 22
+ 9 25 19 21 24
+21 14 11 17 19
+
