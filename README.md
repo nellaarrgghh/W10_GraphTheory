@@ -201,4 +201,4 @@ Minimum Total Distance / Cost: 20 km
 ## AI Usage Disclosure
 
 ### AI Involved:
-1. [Insert AI share link here]
+1. https://share.gemini.google/YaGgTx7MFLB7
