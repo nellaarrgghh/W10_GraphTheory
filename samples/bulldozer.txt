@@ -1,0 +1,8 @@
+# Bulldozer to construction site problem from W11 Matching and Coloring slides.
+# 4 bulldozers (sources) and 4 construction sites (destinations), unit supply/demand.
+4 4
+90 75 75 80
+35 85 55 65
+125 95 90 105
+45 110 95 115
+

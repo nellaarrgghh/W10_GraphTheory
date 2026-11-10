@@ -1,0 +1,7 @@
+# Unbalanced transportation problem where demand (4) exceeds supply (3).
+2 2
+2 1
+2 2
+14 8
+9 16
+
