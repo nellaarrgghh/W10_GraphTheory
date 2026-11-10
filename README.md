@@ -188,7 +188,7 @@ Minimum Total Distance / Cost: 20 km
 ## B. Graph Coloring using a Recursive Backtracking Algorithm
 
 ### 1. Short explanation about algorithm
-For this assignment, the Sudoku puzzle is modeled as a graph vertex coloring problem where the 81 grid cells act as vertices, the numbers 1 until 9 act as vertex colors, and the adjacency constraints are defined by rows, columns, and local 3x3 sub-grids. Because this is a Constraint Satisfaction problem, standard Greedy coloring is not enough, hence why the implementation of a **Backtracking Algorithm**. It recursively assigns a color to the next unassigned vertex and validates it against all adjacent neighbors. If the program runs into a conflicting state, the algorithm backtracks by resetting the cell and trying the next available color option until a valid coloring for the entire graph is found.
+For this assignment, the Sudoku puzzle is modeled as a graph vertex coloring problem where the 81 grid cells act as vertices, the numbers 1 until 9 act as vertex colors, and the adjacency constraints are defined by rows, columns, and local 3x3 sub-grids. Because this is a Constraint Satisfaction problem, standard Greedy coloring is not enough, hence the use of a **Backtracking Algorithm**. It recursively assigns a color to the next unassigned vertex and validates it against all adjacent neighbors. If the program runs into a conflicting state, the algorithm backtracks by resetting the cell and trying the next available color option until a valid coloring for the entire graph is found.
 
 ### 2. Prerequisite to run the code, if any
 - Python 3.x. 
@@ -196,7 +196,7 @@ For this assignment, the Sudoku puzzle is modeled as a graph vertex coloring pro
 ### 3. Instructions to run the code
 1. Move into the `W10` directory
 2. Run `sudoku.py` by doing ```py sudoku.py```
-3. When prompted, paste a valid 81-character Sudoku puzzle string(using 0 or . for empty cells) and press Enter.
+3. When prompted, paste a valid 81-character Sudoku puzzle string (using 0 or . for empty cells) and press Enter.
 
 ### 4. Result of sample run
 
