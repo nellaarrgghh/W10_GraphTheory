@@ -34,19 +34,19 @@ cd W10
 #### Run with sample input files:
 ```sh
 # Bulldozer assignment problem from the lecture slides (with step-by-step matrices)
-python3 main.py samples/bulldozer.txt --steps
+python3 hungarian.py samples/bulldozer.txt --steps
 
 # Balanced multi-unit transportation problem
-python3 main.py samples/balanced_transport.txt
+python3 hungarian.py samples/balanced_transport.txt
 
 # Unbalanced transportation problems (surplus supply or unfulfilled demand)
-python3 main.py samples/unbalanced_supply.txt
-python3 main.py samples/unbalanced_demand.txt
+python3 hungarian.py samples/unbalanced_supply.txt
+python3 hungarian.py samples/unbalanced_demand.txt
 ```
 
 #### Run interactively:
 ```sh
-python3 main.py
+python3 hungarian.py
 ```
 Follow the prompts to enter the dimensions, choose unit assignment (`1`) or custom supplies and demands (`2`), and enter each row of the cost matrix:
 ```text
@@ -64,7 +64,7 @@ Cost row 2/2 (2 non-negative integers): 15 12
 
 #### Sample 1: Bulldozer to Construction Sites (`samples/bulldozer.txt`)
 ```text
-$ python3 main.py samples/bulldozer.txt --steps
+$ python3 hungarian.py samples/bulldozer.txt --steps
 Input: bulldozer.txt
 Sources: 4 (supplies: 1 1 1 1)
 Destinations: 4 (demands: 1 1 1 1)
@@ -108,7 +108,7 @@ Minimum Total Cost: 275
 
 #### Sample 2: Balanced Multi-Unit Transportation (`samples/balanced_transport.txt`)
 ```text
-$ python3 main.py samples/balanced_transport.txt
+$ python3 hungarian.py samples/balanced_transport.txt
 Input: balanced_transport.txt
 Sources: 3 (supplies: 2 3 2)
 Destinations: 3 (demands: 3 2 2)
@@ -124,7 +124,7 @@ Minimum Total Cost: 65
 
 #### Sample 3: Unbalanced Supply (`samples/unbalanced_supply.txt`)
 ```text
-$ python3 main.py samples/unbalanced_supply.txt
+$ python3 hungarian.py samples/unbalanced_supply.txt
 Input: unbalanced_supply.txt
 Sources: 2 (supplies: 3 2)
 Destinations: 2 (demands: 2 2)
@@ -140,7 +140,7 @@ Minimum Total Cost: 44
 
 #### Sample 4: Unbalanced Demand (`samples/unbalanced_demand.txt`)
 ```text
-$ python3 main.py samples/unbalanced_demand.txt
+$ python3 hungarian.py samples/unbalanced_demand.txt
 Input: unbalanced_demand.txt
 Sources: 2 (supplies: 2 1)
 Destinations: 2 (demands: 2 2)
