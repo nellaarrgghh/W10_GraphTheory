@@ -185,20 +185,78 @@ Minimum Total Distance / Cost: 20 km
 
 ---
 
-## B. [Algorithm Name]
+## B. Graph Coloring using a Recursive Backtracking Algorithm
 
 ### 1. Short explanation about algorithm
+For this assignment, the Sudoku puzzle is modeled as a graph vertex coloring problem where the 81 grid cells act as vertices, the numbers 1 until 9 act as vertex colors, and the adjacency constraints are defined by rows, columns, and local 3x3 sub-grids. Because this is a Constraint Satisfaction problem, standard Greedy coloring is not enough, hence why the implementation of a **Backtracking Algorithm**. It recursively assigns a color to the next unassigned vertex and validates it against all adjacent neighbors. If the program runs into a conflicting state, the algorithm backtracks by resetting the cell and trying the next available color option until a valid coloring for the entire graph is found.
 
 ### 2. Prerequisite to run the code, if any
+- Python 3.x. 
 
 ### 3. Instructions to run the code
+1. Move into the `W10` directory
+2. Run `sudoku.py` by doing ```py sudoku.py```
+3. When prompted, paste a valid 81-character Sudoku puzzle string(using 0 or . for empty cells) and press Enter.
 
 ### 4. Result of sample run
 
+Sample 1 (Easy difficulty):
+```python
+Enter 81-character Sudoku string: 530070000600195000098000060800060003400803001700020006060000280000419005000080079
 
+Solved Sudoku Board:
+5 3 4 | 6 7 8 | 9 1 2
+6 7 2 | 1 9 5 | 3 4 8
+1 9 8 | 3 4 2 | 5 6 7
+- - - + - - - + - - -
+8 5 9 | 7 6 1 | 4 2 3
+4 2 6 | 8 5 3 | 7 9 1
+7 1 3 | 9 2 4 | 8 5 6
+- - - + - - - + - - -
+9 6 1 | 5 3 7 | 2 8 4
+2 8 7 | 4 1 9 | 6 3 5
+3 4 5 | 2 8 6 | 1 7 9
+```
+
+Sample 2 (Medium difficulty):
+```python
+Enter 81-character Sudoku string: 003020600900305001001806400008102900700000008006708200002609500800203009005010300
+
+Solved Sudoku Board:
+4 8 3 | 9 2 1 | 6 5 7
+9 6 7 | 3 4 5 | 8 2 1
+2 5 1 | 8 7 6 | 4 9 3
+- - - + - - - + - - -
+5 4 8 | 1 3 2 | 9 7 6
+7 2 9 | 5 6 4 | 1 3 8
+1 3 6 | 7 9 8 | 2 4 5
+- - - + - - - + - - -
+3 7 2 | 6 8 9 | 5 1 4
+8 1 4 | 2 5 3 | 7 6 9
+6 9 5 | 4 1 7 | 3 8 2
+```
+
+Sample 3 (Hard difficulty):
+```python
+Enter 81-character Sudoku string: 800000000003600000070902000050007000000045700000100030001000068008500010090000400
+
+Solved Sudoku Board:
+8 1 2 | 4 5 3 | 6 7 9
+9 4 3 | 6 7 1 | 2 8 5
+6 7 5 | 9 8 2 | 1 4 3
+- - - + - - - + - - -
+1 5 4 | 2 3 7 | 8 9 6
+3 6 9 | 8 4 5 | 7 2 1
+2 8 7 | 1 6 9 | 5 3 4
+- - - + - - - + - - -
+5 2 1 | 7 9 4 | 3 6 8
+4 3 8 | 5 2 6 | 9 1 7
+7 9 6 | 3 1 8 | 4 5 2
+```
 ---
 
 ## AI Usage Disclosure
 
 ### AI Involved:
 1. https://share.gemini.google/YaGgTx7MFLB7
+2. https://share.gemini.google/nWcAYOaFniUn
