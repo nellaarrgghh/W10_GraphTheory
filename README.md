@@ -253,6 +253,12 @@ Solved Sudoku Board:
 4 3 8 | 5 2 6 | 9 1 7
 7 9 6 | 3 1 8 | 4 5 2
 ```
+
+Sample 4 (Row Conflict):
+```text
+Enter 81-character Sudoku string: 530070005600195000098000060800060003400803001700020006060000280000419005000080079
+No solution exists for this puzzle.
+```
 ---
 
 ## AI Usage Disclosure
