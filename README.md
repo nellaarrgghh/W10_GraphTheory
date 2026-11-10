@@ -201,7 +201,7 @@ For this assignment, the Sudoku puzzle is modeled as a graph vertex coloring pro
 ### 4. Result of sample run
 
 Sample 1 (Easy difficulty):
-```python
+```sh
 Enter 81-character Sudoku string: 530070000600195000098000060800060003400803001700020006060000280000419005000080079
 
 Solved Sudoku Board:
@@ -219,7 +219,7 @@ Solved Sudoku Board:
 ```
 
 Sample 2 (Medium difficulty):
-```python
+```sh
 Enter 81-character Sudoku string: 003020600900305001001806400008102900700000008006708200002609500800203009005010300
 
 Solved Sudoku Board:
@@ -237,7 +237,7 @@ Solved Sudoku Board:
 ```
 
 Sample 3 (Hard difficulty):
-```python
+```sh
 Enter 81-character Sudoku string: 800000000003600000070902000050007000000045700000100030001000068008500010090000400
 
 Solved Sudoku Board:
