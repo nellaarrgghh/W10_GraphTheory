@@ -259,10 +259,8 @@ Sample 4 (Row Conflict):
 Enter 81-character Sudoku string: 530070005600195000098000060800060003400803001700020006060000280000419005000080079
 No solution exists for this puzzle.
 ```
+
 ---
-
-## AI Usage Disclosure
-
 ### AI Involved:
 1. https://share.gemini.google/YaGgTx7MFLB7
 2. https://share.gemini.google/NcVhcgxLTZ9n
